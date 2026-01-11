@@ -38,9 +38,32 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    @GetMapping("/me")
+    /*@GetMapping("/me")
     public ResponseEntity<User> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
         User user = userService.getUserByAuth0Id(jwt.getSubject());
+        return ResponseEntity.ok(user);
+    } */
+
+    @GetMapping("/me")
+    public ResponseEntity<User> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+        // 1. Pridobimo podatke iz žetona
+        String auth0Id = jwt.getSubject();
+        String email = jwt.getClaimAsString("email");
+        String name = jwt.getClaimAsString("name");
+
+        // Če emaila ni v standardnem polju, poskusi še s tvojim namespace-om
+        if (email == null) {
+            email = jwt.getClaimAsString("https://shopsync-api.com/email");
+        }
+
+        // 2. Namesto getUserByAuth0Id uporabi syncUserWithAuth0!
+        // Ta metoda bo uporabnika poiskala, če pa ga ni, ga bo USTVARILA.
+        User user = userService.syncUserWithAuth0(
+                auth0Id,
+                email != null ? email : "neznan@email.com",
+                name != null ? name : "Neznan Uporabnik"
+        );
+
         return ResponseEntity.ok(user);
     }
 
