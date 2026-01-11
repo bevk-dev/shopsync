@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:17
+    container_name: shopsync-db
+    environment:
+      POSTGRES_DB: shopsync
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: shopsync-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      # POMEMBNO: Tukaj rečemo appu, naj bazo išče na 'db', ne na 'localhost'!
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+
+volumes:
+  postgres_data:
